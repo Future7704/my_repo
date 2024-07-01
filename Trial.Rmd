@@ -1,0 +1,24 @@
+---
+title: "Trial"
+output: html_document
+date: "2024-07-01"
+---
+
+Hello world!
+
+# ITALIC
+*italic*
+_italic_
+
+##### NUMBERED_LIST
+1. super
+2. cali
+3. future
+
+```{r}
+#DAMN!!#
+trial1 <- 2+3
+trial1
+```
+
+
