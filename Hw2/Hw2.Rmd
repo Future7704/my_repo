@@ -1,0 +1,100 @@
+---
+title: "Hw2"
+author: "Lai Wei"
+date: "2024-07-03"
+output: html_document
+---
+
+## T1
+### 1.Loading and cleaning
+
+```{r}
+ca_pa <- read.csv("../data/calif_penn_2011.csv")
+
+length(ca_pa[[1]])
+length(ca_pa)
+
+colSums(apply(ca_pa,c(1,2),is.na))
+print("Calculate the number of missing data in each column.")
+
+ca_pa_purged <- na.omit(ca_pa)
+
+length(ca_pa[[1]]) - length(ca_pa_purged[[1]])
+
+print("Yes. We only know how many missing values there are in each column in c, and the positions of missing values in each column may overlap or be different, but e shows the number of rows that originally contain missing values, no matter how many missing values there are. Therefore, there is no direct connection between the two.")
+```
+
+### 2.This Very New House
+
+```{r}
+library(tidyverse)
+
+ggplot(ca_pa_purged, aes(x = Built_2005_or_later, y = Median_house_value)) +
+  geom_point()
+
+ggplot(ca_pa_purged, aes(x = Built_2005_or_later, y = Median_house_value, color = STATEFP)) +
+  geom_point() +
+  facet_wrap(~ STATEFP, scales = "free")
+```
+
+### 3.Nobody Home
+
+```{r}
+ca_pa_purged <- cbind(ca_pa_purged, Vacancy_rate = ca_pa_purged$Vacant_units / ca_pa_purged$Total_units)
+summary(ca_pa_purged$Vacancy_rate)
+
+ggplot(ca_pa_purged, aes(x = Vacancy_rate, y = Median_house_value)) +
+  geom_point()
+
+ggplot(ca_pa_purged, aes(x = Vacancy_rate, y = Median_house_value, color = STATEFP)) +
+  geom_point() +
+  facet_wrap(~ STATEFP)
+
+print("Yes. The tracts with a median house price of more than 500,000 in Pennsylvania is significantly less than that of California. The vacancy rate is higher than in California in the tracts with a median house price of less than 250,000, and lower than in California in the rest of the tracts.")
+```
+
+### 4.
+
+```{r}
+print("This code is used to calculate the median house price of Alameda. First, take out the rows where Alameda is located and store them in the vector 'acca' through a loop code, and then take out the tenth column elements of these rows, that is, the 'mean house price' through a loop statement, store them in another vector 'accamhv', and finally calculate their median number.")
+
+median((ca_pa_purged %>% filter(STATEFP == 6 & COUNTYFP == 1))$Median_house_value)
+
+Alam <- ca_pa_purged %>% filter(STATEFP == 6 & COUNTYFP == 1)
+mean(Alam$Built_2005_or_later / Alam$Total_units)
+
+Sant <- ca_pa_purged %>% filter(STATEFP == 6 & COUNTYFP == 85)
+mean(Sant$Built_2005_or_later / Sant$Total_units)
+
+Alle <- ca_pa_purged %>% filter(STATEFP == 42 & COUNTYFP == 3)
+mean(Alle$Built_2005_or_later / Alle$Total_units)
+
+cor(ca_pa_purged$Median_house_value, (ca_pa_purged$Built_2005_or_later / ca_pa_purged$Total_units))
+
+Cali <- ca_pa_purged %>% filter(STATEFP == 6)
+Penn <- ca_pa_purged %>% filter(STATEFP == 42)
+
+cor(Cali$Median_house_value, (Cali$Built_2005_or_later / Cali$Total_units))
+
+cor(Penn$Median_house_value, (Penn$Built_2005_or_later / Penn$Total_units))
+
+cor(Alam$Median_house_value, (Alam$Built_2005_or_later / Alam$Total_units))
+
+cor(Sant$Median_house_value, (Sant$Built_2005_or_later / Sant$Total_units))
+
+cor(Alle$Median_house_value, (Alle$Built_2005_or_later / Alle$Total_units))
+
+ggplot(Alam, aes(x = Median_house_value, y = Median_household_income)) +
+  geom_point()
+
+ggplot(Sant, aes(x = Median_house_value, y = Median_household_income)) +
+  geom_point()
+
+ggplot(Alle, aes(x = Median_house_value, y = Median_household_income)) +
+  geom_point()
+```
+
+
+
+
+
