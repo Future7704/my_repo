@@ -29,12 +29,21 @@ print("Yes. We only know how many missing values there are in each column in c, 
 ```{r}
 library(tidyverse)
 
+ca_pa_purged <- ca_pa_purged %>%
+  mutate(is_state_Cali = STATEFP==6)
+
 ggplot(ca_pa_purged, aes(x = Built_2005_or_later, y = Median_house_value)) +
   geom_point()
 
-ggplot(ca_pa_purged, aes(x = Built_2005_or_later, y = Median_house_value, color = STATEFP)) +
+ggplot(ca_pa_purged, aes(x = Built_2005_or_later, y = Median_house_value, color = is_state_Cali)) +
   geom_point() +
-  facet_wrap(~ STATEFP, scales = "free")
+  facet_wrap(~ STATEFP, scales = "free") +
+  scale_color_manual(
+    name = "State",
+    values = c("TRUE" = "red", "FALSE" = "blue"),
+    labels = c("TRUE" = "Cali", "FALSE" = "Penn")
+  ) +
+  theme(legend.title = element_blank())
 ```
 
 ### 3.Nobody Home
@@ -46,9 +55,14 @@ summary(ca_pa_purged$Vacancy_rate)
 ggplot(ca_pa_purged, aes(x = Vacancy_rate, y = Median_house_value)) +
   geom_point()
 
-ggplot(ca_pa_purged, aes(x = Vacancy_rate, y = Median_house_value, color = STATEFP)) +
+ggplot(ca_pa_purged, aes(x = Vacancy_rate, y = Median_house_value, color = is_state_Cali)) +
   geom_point() +
-  facet_wrap(~ STATEFP)
+  facet_wrap(~ STATEFP) +
+  scale_color_manual(
+    name = NULL,
+    values = c("TRUE" = "red", "FALSE" = "blue"),
+    labels = c("TRUE" = "Cali", "FALSE" = "Penn")
+  )
 
 print("Yes. The tracts with a median house price of more than 500,000 in Pennsylvania is significantly less than that of California. The vacancy rate is higher than in California in the tracts with a median house price of less than 250,000, and lower than in California in the rest of the tracts.")
 ```
@@ -95,6 +109,56 @@ ggplot(Alle, aes(x = Median_house_value, y = Median_household_income)) +
 ```
 
 
+## MB.Ch1.11
+
+```{r}
+gender <- factor(c(rep("female",91),rep("male",92)))
+table(gender)
+
+gender <- factor(gender, levels = c("male", "female"))
+table(gender)
+
+gender <- factor(gender, levels = c("Male", "female"))
+table(gender)
+
+table(gender, exclude = NULL)
+
+rm(gender)
+```
+
+Explanation: First, use the vector to generate the factor, and then use the table function to generate its frequency table. Then the level order of the factors is changed, so the column order of the frequency table also changes. Then, at the factor level, "male" is replaced with a value "Male" that does not exist in the original vector, so all the males in the factor become NA, and the number of males in the frequency table is 0. Finally, when generating the frequency table, it contains NA, so there is an extra column of NA in the table.
+
+## MB.Ch1.12
+
+```{r}
+func <- function(x=c(), a){
+  y <- x > a
+  return(sum(y) / length(x))
+}
+
+test <- c(1:100)
+func(test, 49)
+
+library(Devore7)
+library(lattice)
+
+dotplot(ex01.36$C1, xlab="distribution_of_times")
+func(ex01.36, 7)
+```
+
+## Ch1.18
+
+```{r}
+library(MASS)
+
+rab_Rs <- unstack(Rabbit, BPchange ~ Animal)
+rab_Tr <- unstack(Rabbit, Treatment ~ Animal)$R1
+rab_Do <- unstack(Rabbit, Dose ~ Animal)$R1
+Rabbit_wide <- data.frame("Treatment" = rab_Tr, 
+                          "Dose" = rab_Do,
+                          rab_Rs)
+Rabbit_wide
+```
 
 
 
