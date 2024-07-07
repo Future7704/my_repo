@@ -1,0 +1,85 @@
+---
+title: "Homework 5: Pareto and Kuznets on the Grand Tour"
+author: "Lai Wei"
+date: "2024-07-07"
+output: html_document
+---
+
+## **Question 1: percentile_ratio_discrepancies Function**
+
+```{r}
+percentile_ratio_discrepancies <- function(P99, P99.5, P99.9, a) {
+  term1 <- (P99 / P99.9)^(-a + 1) - 10
+  term2 <- (P99.5 / P99.9)^(-a + 1) - 5
+  term3 <- (P99 / P99.5)^(-a + 1) - 2
+  discrepancies <- term1^2 + term2^2 + term3^2
+  return(discrepancies)
+}
+
+# Check the function with provided values
+percentile_ratio_discrepancies(1e6, 2e6, 1e7, 2)
+
+```
+
+## **Question 2: exponent.multi_ratios_est Function**
+
+```{r}
+exponent.multi_ratios_est <- function(P99, P99.5, P99.9) {
+  initial_a <- 1 - log(10) / log(P99 / P99.9)
+  result <- suppressWarnings(
+    optim(
+      par = initial_a, 
+      fn = function(a) percentile_ratio_discrepancies(P99, P99.5, P99.9, a),
+      method = "Brent",
+      lower = 1, 
+      upper = 10
+    )
+  )
+  return(result$par)
+}
+
+# Check the function with provided values
+exponent.multi_ratios_est(1e6, 2e6, 1e7)
+
+```
+
+## **Question 3: Estimating a for the US from 1913 to 2012**
+
+```{r}
+# Load data
+wtid_data <- read.csv("../data/wtid-report.csv")
+
+# Extract relevant columns
+wtid_subset <- wtid_data[, c("Year", "P99.income.threshold", "P99.5.income.threshold", "P99.9.income.threshold")]
+
+# Estimate a for each year
+years <- unique(wtid_subset$Year)
+estimates <- sapply(years, function(y) {
+  data <- subset(wtid_subset, Year == y)
+  exponent.multi_ratios_est(data$P99.income.threshold, data$P99.5.income.threshold, data$P99.9.income.threshold)
+})
+
+# Plot the estimates
+plot(years, estimates, type = "l", xlab = "Year", ylab = "Estimated a", main = "Estimated Pareto Exponent (a) Over Time")
+
+```
+
+## **Question 4: Scatter Plot Comparison**
+
+```{r}
+exponent.est_ratio <- function(P99, P99.9) {
+  return(1 - log(10) / log(P99 / P99.9))
+}
+
+# Estimate a using exponent.est_ratio for each year
+estimates_ratio <- sapply(years, function(y) {
+  data <- subset(wtid_subset, Year == y)
+  exponent.est_ratio(data$P99.income.threshold, data$P99.9.income.threshold)
+})
+
+# Scatter plot comparison
+plot(estimates, estimates_ratio, xlab = "Estimates from multi-ratios", ylab = "Estimates from ratio", main = "Comparison of a Estimates")
+abline(0, 1, col = "red")  # Line y = x
+
+```
+<center><font size=4.5>*Their estimated effect is almost the same！*</font></center>
