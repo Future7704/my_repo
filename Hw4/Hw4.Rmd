@@ -1,0 +1,121 @@
+---
+title: "Hw4"
+author: "Lai Wei"
+date: "2024-07-06"
+output: html_document
+---
+
+## 1
+
+```{r}
+library(tidyverse)
+ckm_nodes <- read.csv('../data/ckm_nodes.csv')
+noinfor <- which(is.na(ckm_nodes$adoption_date))
+ckm_nodes <- ckm_nodes[-noinfor, ]
+ckm_network <- read.table('../data/ckm_network.dat')
+ckm_network <- ckm_network[-noinfor,-noinfor]
+```
+
+## 2
+
+```{r}
+ckm_nodes$adoption_date[which(ckm_nodes$adoption_date==Inf)] <- 0
+monthnet <- sweep(ckm_network, 2, ckm_nodes$adoption_date, "*")
+
+# 使用 replicate() 函数生成包含 n 个相同矩阵的列表
+matrix_list <- replicate(17, monthnet, simplify = FALSE)
+
+# 使用 do.call() 和 rbind() 函数按行拼接这些矩阵
+big_matrix <- do.call(rbind, matrix_list)
+
+compared_with <- matrix(rep(1:17, each = 125^2), ncol = 125, byrow = TRUE)
+
+tf_big_matrix1 <- big_matrix > 0 & big_matrix < compared_with
+tf_big_matrix2 <- big_matrix > 0 & big_matrix <= compared_with
+
+strictly_before <- rowSums(tf_big_matrix1)
+in_or_earlier <- rowSums(tf_big_matrix2)
+
+new_df <- data.frame("doc_num" = rep(1:125,times = 17), "month" = rep(1:17, each = 125),
+                     "began_ornot" = rep(ckm_nodes$adoption_date, times = 17)==rep(1:17, each = 125),
+                     "before_ornot" = rep(ckm_nodes$adoption_date, times = 17)<rep(1:17, each = 125),
+                     "contacts_before" = strictly_before,
+                     "contacts_ioearlier" = in_or_earlier)
+str(new_df)
+```
+
+## 3
+### a
+
+```{r}
+max(rowSums(ckm_network))
+```
+
+### b
+
+```{r}
+est_pk <- new_df %>%
+  filter(before_ornot != TRUE) %>%
+  group_by(contacts_before) %>%
+  summarise(pk = mean(began_ornot))
+est_pk
+
+plot(est_pk)
+```
+
+### c
+
+```{r}
+est_qk <- new_df %>%
+  filter(before_ornot != TRUE) %>%
+  group_by(contacts_ioearlier) %>%
+  summarise(qk = mean(began_ornot))
+est_qk
+
+plot(est_qk)
+```
+
+## 4
+### a
+
+```{r}
+lmodel <- lm(pk ~ contacts_before, est_pk)
+summary(lmodel)
+```
+
+### b
+
+```{r}
+logmodel <- function(a, b, k) {
+exp(a + b * k) / (1 + exp(a + b * k)) }
+
+ab_fit <- nls(
+  pk ~ logmodel(a, b, contacts_before),
+  data = est_pk,
+  start = list(a = 0, b = 0)
+)
+
+summary(ab_fit)
+```
+
+### c
+
+```{r}
+plot(est_pk, xlab = "k", ylab = "Pr", main = "Which model is better?")
+
+a_lm <- coefficients(lmodel)[[1]]
+b_lm <- coefficients(lmodel)[[2]]
+#x <- est_pk$contacts_before
+curve(a_lm + b_lm*x, col = "red", add = TRUE)
+
+a_log <- coefficients(ab_fit)[[1]]
+b_log <- coefficients(ab_fit)[[2]]
+curve(logmodel(a_log, b_log, x), col = "blue", add = TRUE)
+
+legend("right", legend = c("linear model", "logistic model"), col = c("red", "blue"), lty = 1, text.col =c("red", "blue"))
+```
+Logistic model fits better!
+
+
+
+
