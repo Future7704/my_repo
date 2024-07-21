@@ -1,0 +1,242 @@
+---
+title: "Solutions for Final2024"
+author: "Lai Wei"
+date: "2024-07-08"
+output: html_document
+---
+```{r}
+library(tidyverse)
+```
+
+## 1.
+
+```{r}
+A <- matrix(c(9, 5, 2, 9, 4, 0, 6, 2, 12, 7, 8, 9, 2, 9, 0, 11), nrow = 4)
+b <- c(7, 18, 1, 0)
+solution <- solve(A, b)
+solution
+```
+
+## 2.
+
+```{r}
+xVec <- sample(0:999, 250, replace = TRUE)
+yVec <- sample(0:999, 250, replace = TRUE)
+```
+
+### a. Create the vector
+```{r}
+zVec <- yVec[seq(2, 250, by = 2)] - xVec[seq(1, 249, by = 2)]
+zVec
+```
+
+### b. Pick out the values in yVec which are > 600
+```{r}
+yVec_greater_than_600 <- yVec[yVec > 600]
+yVec_greater_than_600
+```
+
+### c. Index positions in yVec of the values which are > 600
+```{r}
+index_positions <- which(yVec > 600)
+index_positions
+```
+
+### d. Sort the numbers in xVec in the order of increasing values in yVec
+```{r}
+sorted_xVec <- xVec[order(yVec)]
+sorted_xVec
+```
+
+### e. Elements in yVec at index positions 1, 4, 7, ...
+```{r}
+selected_elements <- yVec[seq(1, length(yVec), by = 3)]
+selected_elements
+```
+
+## 3.
+
+```{r}
+data(state)
+state.x77 <- as_tibble(state.x77, rownames = "State")
+```
+
+### a. Select states with income < 4300 and calculate average income
+```{r}
+states_low_income <- state.x77 %>% filter(Income < 4300)
+average_income <- mean(states_low_income$Income)
+average_income
+```
+
+### b. Sort by income and select the state with the highest income
+```{r}
+state_highest_income <- state.x77 %>% arrange(desc(Income)) %>% slice(1)
+state_highest_income
+```
+
+### c. Add a variable categorizing the size of population
+```{r}
+state.x77 <- state.x77 %>%
+  mutate(Population_Size = ifelse(Income <= 4500, "S", "L"))
+```
+
+### d. Average income and illiteracy by population size
+```{r}
+average_values <- state.x77 %>%
+  group_by(Population_Size) %>%
+  summarise(
+    avg_income = mean(Income),
+    avg_illiteracy = mean(Illiteracy)
+  )
+average_values
+```
+
+## 4.
+
+### a. Function to simulate n observations from uniform distribution
+```{r}
+simulate_uniform <- function(n) {
+  x <- runif(n, 0, 1)
+  y <- runif(n, 0, 1)
+  tibble(x = x, y = y)
+}
+```
+
+### b. Function to calculate proportions
+```{r}
+calculate_proportions <- function(data) {
+  dist_to_edge <- pmin(data$x, 1 - data$x, data$y, 1 - data$y)
+  dist_to_vertex <- pmin(
+    sqrt(data$x^2 + data$y^2),
+    sqrt((1 - data$x)^2 + data$y^2),
+    sqrt(data$x^2 + (1 - data$y)^2),
+    sqrt((1 - data$x)^2 + (1 - data$y)^2)
+  )
+  prop_edge <- mean(dist_to_edge < 0.25)
+  prop_vertex <- mean(dist_to_vertex < 0.25)
+  list(prop_edge = prop_edge, prop_vertex = prop_vertex)
+}
+
+# Test with n = 1000
+set.seed(37)
+data <- simulate_uniform(1000)
+calculate_proportions(data)
+```
+
+## 5.
+
+```{r}
+n <- 10000
+set.seed(1)
+points <- tibble(x = runif(n), y = runif(n))
+points <- points %>%
+  mutate(inside = map2_dbl(.x = x, .y = y, ~ifelse(.x^2 + .y^2 < 1, 1, 0))) %>%
+  rowid_to_column("N")
+```
+
+### a. Compute the estimation of π at each row
+```{r}
+points <- points %>%
+  mutate(pi_estimate = 4 * cumsum(inside) / N)
+```
+
+### b. Plot the estimates of π against N
+```{r}
+ggplot(points, aes(x = N, y = pi_estimate)) +
+  geom_line() +
+  labs(title = "Estimation of π over iterations", x = "N", y = "π Estimate")
+```
+
+## 6.
+
+```{r}
+suicrates <- tibble(
+  Country = c('Canada', 'Israel', 'Japan', 'Austria', 'France', 'Germany', 'Hungary', 'Italy', 'Netherlands', 'Poland', 'Spain', 'Sweden', 'Switzerland', 'UK', 'USA'),
+  Age25.34 = c(22, 9, 22, 29, 16, 28, 48, 7, 8, 26, 4, 28, 22, 10, 20),
+  Age35.44 = c(27, 19, 19, 40, 25, 35, 65, 8, 11, 29, 7, 41, 34, 13, 22),
+  Age45.54 = c(31, 10, 21, 52, 36, 41, 84, 11, 18, 36, 10, 46, 41, 15, 28),
+  Age55.64 = c(34, 14, 31, 53, 47, 49, 81, 18, 20, 32, 16, 51, 50, 17, 33),
+  Age65.74 = c(24, 27, 49, 69, 56, 52, 107, 27, 28, 28, 22, 35, 51, 22, 37)
+)
+```
+
+### a. Transform suicrates into long form
+```{r}
+suicrates_long <- suicrates %>%
+  pivot_longer(cols = starts_with("Age"), names_to = "AgeGroup", values_to = "Rate")
+```
+
+### b. Construct side-by-side box plots
+```{r}
+ggplot(suicrates_long, aes(x = AgeGroup, y = Rate)) +
+  geom_boxplot() +
+  labs(title = "Suicide Rates by Age Group", x = "Age Group", y = "Rate per 100,000")
+```
+<font size=4.5>*The suicide rate in the age range from 25.34 to 65.74 increases with age, and the difference in suicide rates in different countries increases with age.*</font>
+
+## 7.
+
+```{r}
+LaborSupply <- read_csv("LaborSupply.csv")
+
+# Create hour and wage variables
+labor <- LaborSupply %>%
+  mutate(hour = exp(lnhr), wage = exp(lnwg), .before = kids) %>%
+  dplyr::select(-lnhr, -lnwg)
+```
+
+### a. Compute average annual hours worked and their standard deviations by year
+```{r}
+avg_hours_sd <- labor %>%
+  group_by(year) %>%
+  summarise(
+    avg_hours = mean(hour),
+    sd_hours = sd(hour)
+  )
+avg_hours_sd
+```
+
+### b. Age group that worked the most hours in 1982
+```{r}
+most_hours_1982 <- labor %>%
+  filter(year == 1982) %>%
+  group_by(age) %>%
+  summarise(avg_hours = mean(hour)) %>%
+  arrange(desc(avg_hours)) %>%
+  slice(1)
+most_hours_1982
+```
+
+### c. Create n_years variable
+```{r}
+labor <- labor %>%
+  group_by(id) %>%
+  mutate(n_years = n_distinct(year)) %>%
+  ungroup()
+
+# Is the panel balanced?
+is_balanced <- all(labor %>% count(id) %>% pull(n) == labor$n_years)
+is_balanced
+```
+
+### d. Individuals without any kids during the whole period
+```{r}
+labor <- labor %>%
+  group_by(id) %>%
+  mutate(no_kids = ifelse(all(kids == 0), 1, 0)) %>%
+  ungroup()
+```
+
+### e. Average wage, standard deviation, and number of observations for no kids vs kids in 1980
+```{r}
+stats_1980 <- labor %>%
+  filter(year == 1980) %>%
+  group_by(no_kids) %>%
+  summarise(
+    avg_wage = mean(wage),
+    sd_wage = sd(wage),
+    n = n()
+  )
+stats_1980
+```
+

@@ -1,0 +1,62 @@
+---
+title: "Additional Built-in Functions"
+author: "Lai Wei"
+date: "2024-07-11"
+output: 
+  html_document: 
+    toc: true
+    highlight: espresso
+    theme: readable
+---
+
+## values preset
+```{r}
+num_vec <- c(3,6,3,8)
+spp_vec <- c("spp1","spp3","spp2","spp3")
+dataframe <- data.frame(num_vec, spp_vec)
+data(trees)
+tree_data <- trees
+fitted_model <- lm(Height ~ Volume, data = tree_data)
+
+```
+
+
+## **1** `grepl` 
+#### Usage
+To find out whether the element of a character vector contains a particular string. 
+
+#### Syntax
+grepl(`character`, `char_vec`)
+
+#### Example
+```{r}
+grepl("sp", spp_vec)
+
+#To find out those rows whose element in "spp_vec" colomn contains 
+#"3"
+dataframe[grepl("3", dataframe$spp_vec),]
+```
+
+## **2** `abline`
+#### Usage
+To draw a fixed straight line.
+
+#### Syntax
+***Attention**: `abline` must be called after plot function*  
+abline(`model`)  
+abline(`v = ???`)  
+abline(`h = ???`)
+
+#### Example
+```{r}
+plot(Height ~ Volume, data = tree_data)
+
+#Extrcat "a""b" from the model, then draw the abline.
+abline(fitted_model)
+
+#"v" means "vertical"
+#"h" means "horizonal"
+abline(v = 40)
+abline(h = 80)
+```
+

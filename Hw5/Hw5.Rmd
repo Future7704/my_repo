@@ -2,7 +2,11 @@
 title: "Homework 5: Pareto and Kuznets on the Grand Tour"
 author: "Lai Wei"
 date: "2024-07-07"
-output: html_document
+output: 
+  html_document: 
+    highlight: espresso
+    theme: readable
+    toc: true
 ---
 
 ## **Question 1: percentile_ratio_discrepancies Function**
@@ -83,3 +87,9 @@ abline(0, 1, col = "red")  # Line y = x
 
 ```
 <center><font size=4.5>*Their estimated effect is almost the same！*</font></center>
+
+## **Session Info**
+```{r}
+sessionInfo()
+```
+
